@@ -1,35 +1,39 @@
+name: news-sentiment-reader
 services:
-  # Ollama service with GPU reservation
   ollama:
-    image: ollama/ollama
+    image: ollama/ollama:latest
     container_name: ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama_cache:/var/ollama/cache
-    command: serve
-    entrypoint: /bin/bash -c "ollama pull deepseek-r1:14b && ollama serve"
-#    runtime: nvidia
+    tty: true
+    command: >
+      serve &&
+      ollama pull deepseek-r1:14b
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [ gpu ]
-    # For non-Swarm deployments, if GPU access is needed, you might add:
-    # runtime: nvidia
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - ollama_network
 
-  # App service configured for development
   app:
     build:
       context: ..
-      dockerfile: .devcontainer/Dockerfile
+      dockerfile: .devcontainer/DockerfileSentiment
     container_name: news-sentiment-analyser
     init: true
-    entrypoint:
-      - sleep
-      - infinity
+    entrypoint: ["python", "app.py"]  # Replace this with your actual start command
     environment:
       - OLLAMA_HOST=http://ollama
       - OLLAMA_PORT=11434
@@ -37,14 +41,21 @@ services:
       - LOG_LEVEL=info
     volumes:
       - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-      - type: bind
         source: ..
         target: /workspace
         consistency: cached
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
+    networks:
+      - ollama_network
 
 volumes:
   ollama_cache:
+
+networks:
+  ollama_network:
+    driver: bridge
