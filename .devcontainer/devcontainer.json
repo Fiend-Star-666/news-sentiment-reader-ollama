@@ -40,7 +40,7 @@
           }
         },
         "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": true
+          "source.fixAll.eslint": "explicit"
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
@@ -51,7 +51,11 @@
           "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
         "cSpell.language": "en-GB",
-        "cSpell.userWords": ["analyser", "tailwindcss"]
+        "cSpell.userWords": ["analyser", "tailwindcss", "ollama"],
+        "typescript.enablePromptUseWorkspaceTsdk": true,
+        "editor.quickSuggestions": {
+          "strings": true
+        }
       }
     }
   },
@@ -59,5 +63,6 @@
 //    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "remoteUser": "node"
+  "remoteUser": "node",
+  "updateRemoteUserUID": true
 }

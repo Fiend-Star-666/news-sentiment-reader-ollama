@@ -15,9 +15,8 @@ RUN apt-get update && apt-get install -y \
 SHELL ["/usr/bin/fish", "-c"]
 ENV SHELL=/usr/bin/fish
 
-# Install bun as root and make it available system-wide
-RUN curl -fsSL https://bun.sh/install | bash \
-    && ln -s /root/.bun/bin/bun /usr/local/bin/bun
+# Install bun using npm
+RUN npm install -g bun
 
 # Set up Fish config for node user
 RUN mkdir -p /home/node/.config/fish \
