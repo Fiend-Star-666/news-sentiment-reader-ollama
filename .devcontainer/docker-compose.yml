@@ -1,0 +1,50 @@
+services:
+  # Ollama service with GPU reservation
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_cache:/var/ollama/cache
+    command: serve
+    entrypoint: /bin/bash -c "ollama pull deepseek-r1:14b && ollama serve"
+#    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    # For non-Swarm deployments, if GPU access is needed, you might add:
+    # runtime: nvidia
+
+  # App service configured for development
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: news-sentiment-analyser
+    init: true
+    entrypoint:
+      - sleep
+      - infinity
+    environment:
+      - OLLAMA_HOST=http://ollama
+      - OLLAMA_PORT=11434
+      - RSS_FEED_URL=https://feeds.bbci.co.uk/news/rss.xml
+      - LOG_LEVEL=info
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: ..
+        target: /workspace
+        consistency: cached
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_cache:
